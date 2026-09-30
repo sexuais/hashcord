@@ -12914,7 +12914,7 @@ Type: ${asset.type}`,
   // src/core/ui/settings/index.ts
   function initSettings() {
     registerSection({
-      name: "Hashcord",
+      name: "Kettu",
       items: [
         {
           key: "KETTU",
