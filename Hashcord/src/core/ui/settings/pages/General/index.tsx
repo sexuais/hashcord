@@ -24,7 +24,7 @@ export default function General() {
             <Stack style={{ paddingVertical: 24, paddingHorizontal: 12 }} spacing={24}>
                 <TableRowGroup title={Strings.INFO}>
                     <TableRow
-                        label={Strings.PUPU}
+                        label="Hashcord"
                         icon={<TableRow.Icon source={{ uri: PupuIcon }} />}
                         trailing={<TableRow.TrailingText text={debugInfo.bunny.version} />}
                     />

@@ -13,7 +13,7 @@ export default function About() {
 
     const versions = [
         {
-            label: Strings.PUPU,
+            label: "Hashcord",
             version: debugInfo.bunny.version,
             icon: { uri: PupuIcon },
         },

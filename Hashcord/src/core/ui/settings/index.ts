@@ -16,7 +16,7 @@ export default function initSettings() {
         items: [
             {
                 key: "KETTU",
-                title: () => Strings.PUPU,
+                title: () => "Hashcord",
                 icon: { uri: PupuIcon },
                 render: () => import("@core/ui/settings/pages/General"),
                 useTrailing: () => `(${version})`
