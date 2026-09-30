@@ -102,6 +102,7 @@ jobs:
       # -----------------------------------------------------------------
       - name: Publish to `dist` branch
         run: |
+          SOURCE_DIR="$GITHUB_WORKSPACE"
           PUBLISH_DIR=/tmp/dist-publish
           rm -rf "$PUBLISH_DIR"
           mkdir -p "$PUBLISH_DIR"
@@ -119,14 +120,14 @@ jobs:
           rm -rf "$PUBLISH_DIR/plugins/builds" "$PUBLISH_DIR/plugins/repo.json"
 
           # Hashcord bundle
-          cp Hashcord/dist/hashcord.js "$PUBLISH_DIR/hashcord.js"
-          cp Hashcord/dist/hashcord.js "$PUBLISH_DIR/hashcord.min.js"
+          cp "$SOURCE_DIR/Hashcord/dist/hashcord.js" "$PUBLISH_DIR/hashcord.js"
+          cp "$SOURCE_DIR/Hashcord/dist/hashcord.js" "$PUBLISH_DIR/hashcord.min.js"
 
           # Plugin builds
-          cp plugins/repo.json "$PUBLISH_DIR/plugins/repo.json"
-          if [ -d plugins/builds ]; then
+          cp "$SOURCE_DIR/plugins/repo.json" "$PUBLISH_DIR/plugins/repo.json"
+          if [ -d "$SOURCE_DIR/plugins/builds" ]; then
             mkdir -p "$PUBLISH_DIR/plugins/builds"
-            cp -R plugins/builds/. "$PUBLISH_DIR/plugins/builds/"
+            cp -R "$SOURCE_DIR/plugins/builds/." "$PUBLISH_DIR/plugins/builds/"
           fi
 
           # Build metadata
