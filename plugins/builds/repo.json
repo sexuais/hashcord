@@ -1,0 +1,11 @@
+{
+  "$meta": {
+    "name": "hello156165 - private plugins",
+    "description": "Personal Hashcord plugin repository."
+  },
+  "larp": {
+    "name": "Larp",
+    "description": "[v11.1.5] Larp: local profile spoof (badges list text-only in settings; reload-safe patches).",
+    "hash": "103ca47e1369ff60"
+  }
+}
