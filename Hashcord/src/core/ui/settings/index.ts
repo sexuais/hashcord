@@ -12,7 +12,7 @@ export { PupuIcon };
 export default function initSettings() {
     
     registerSection({
-        name: "Kettu",
+        name: "Hashcord",
         items: [
             {
                 key: "KETTU",

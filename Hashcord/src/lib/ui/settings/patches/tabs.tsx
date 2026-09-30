@@ -22,6 +22,7 @@ export function patchTabsUI(unpatches: (() => void | boolean)[]) {
             [row.key]: {
                 type: "pressable",
                 title: row.title,
+                useTitle: row.title,
                 icon: row.icon,
                 IconComponent: () => <TableRow.Icon source={row.icon} />,
                 usePredicate: row.usePredicate,
@@ -44,6 +45,7 @@ export function patchTabsUI(unpatches: (() => void | boolean)[]) {
             VendettaCustomPage: {
                 type: "route",
                 title: () => "Hashcord",
+                useTitle: () => "Hashcord",
                 screen: {
                     route: "VendettaCustomPage",
                     getComponent: () => CustomPageRenderer
@@ -52,6 +54,7 @@ export function patchTabsUI(unpatches: (() => void | boolean)[]) {
             PUPU_CUSTOM_PAGE: {
                 type: "route",
                 title: () => "Hashcord",
+                useTitle: () => "Hashcord",
                 screen: {
                     route: "PUPU_CUSTOM_PAGE",
                     getComponent: () => CustomPageRenderer
@@ -60,6 +63,7 @@ export function patchTabsUI(unpatches: (() => void | boolean)[]) {
             BUNNY_CUSTOM_PAGE: {
                 type: "route",
                 title: () => "Hashcord",
+                useTitle: () => "Hashcord",
                 screen: {
                     route: "BUNNY_CUSTOM_PAGE",
                     getComponent: () => CustomPageRenderer
