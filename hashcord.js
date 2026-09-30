@@ -6195,6 +6195,7 @@
       [row.key]: {
         type: "pressable",
         title: row.title,
+        useTitle: row.title,
         icon: row.icon,
         IconComponent: () => /* @__PURE__ */ jsx(TableRow.Icon, {
           source: row.icon
@@ -6216,6 +6217,7 @@
         VendettaCustomPage: {
           type: "route",
           title: () => "Hashcord",
+          useTitle: () => "Hashcord",
           screen: {
             route: "VendettaCustomPage",
             getComponent: () => CustomPageRenderer
@@ -6224,6 +6226,7 @@
         PUPU_CUSTOM_PAGE: {
           type: "route",
           title: () => "Hashcord",
+          useTitle: () => "Hashcord",
           screen: {
             route: "PUPU_CUSTOM_PAGE",
             getComponent: () => CustomPageRenderer
@@ -6232,6 +6235,7 @@
         BUNNY_CUSTOM_PAGE: {
           type: "route",
           title: () => "Hashcord",
+          useTitle: () => "Hashcord",
           screen: {
             route: "BUNNY_CUSTOM_PAGE",
             getComponent: () => CustomPageRenderer
@@ -12914,7 +12918,7 @@ Type: ${asset.type}`,
   // src/core/ui/settings/index.ts
   function initSettings() {
     registerSection({
-      name: "Kettu",
+      name: "Hashcord",
       items: [
         {
           key: "KETTU",
