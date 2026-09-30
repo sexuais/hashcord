@@ -6396,7 +6396,7 @@
     useProxy(settings);
     var versions = [
       {
-        label: Strings.PUPU,
+        label: "Hashcord",
         version: debugInfo.bunny.version,
         icon: {
           uri: hashcord_default
@@ -6564,7 +6564,7 @@
             title: Strings.INFO,
             children: [
               /* @__PURE__ */ jsx(TableRow, {
-                label: Strings.PUPU,
+                label: "Hashcord",
                 icon: /* @__PURE__ */ jsx(TableRow.Icon, {
                   source: {
                     uri: hashcord_default
@@ -12919,7 +12919,7 @@ Type: ${asset.type}`,
       items: [
         {
           key: "KETTU",
-          title: () => Strings.PUPU,
+          title: () => "Hashcord",
           icon: {
             uri: hashcord_default
           },
