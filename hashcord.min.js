@@ -3950,15 +3950,12 @@
             continue;
           }
           exportsKeysLength = Reflect.ownKeys(actualExports).length;
-          if (_source[prop] && exportsKeysLength >= _source[prop]) {
+          if (_source[prop] && exportsKeysLength <= _source[prop]) {
             continue;
           }
           _module[prop] = actualExports[prop];
           _source[prop] = Reflect.ownKeys(actualExports).length;
           cacher.cacheId(id);
-          if (exportsKeysLength === 1) {
-            redesignProps.delete(prop);
-          }
         }
       }
       cacher.finish();
@@ -5132,7 +5129,7 @@
       rdtClient = null;
       rdtConnected = false;
       changeHooks = /* @__PURE__ */ new Set();
-      versionHash = "v1.4.2";
+      versionHash = "v1.4.3";
     }
   });
 
@@ -12927,7 +12924,7 @@ Type: ${asset.type}`,
             uri: hashcord_default
           },
           render: () => Promise.resolve().then(() => (init_General(), General_exports)),
-          useTrailing: () => `(${"v1.4.2"})`
+          useTrailing: () => `(${"v1.4.3"})`
         },
         {
           key: "BUNNY_PLUGINS",
@@ -13437,7 +13434,7 @@ Type: ${asset.type}`,
         alert([
           "Failed to load Hashcord!\n",
           `Build Number: ${ClientInfoManager.getConstants().Build}`,
-          `Hashcord: ${"v1.4.2"}`,
+          `Hashcord: ${"v1.4.3"}`,
           stack || e?.toString?.()
         ].join("\n"));
       }
