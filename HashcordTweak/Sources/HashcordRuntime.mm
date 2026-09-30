@@ -15,7 +15,7 @@ static NSData *downloadHashcord(NSURL *directory) {
         url = config.customLoadUrl;
     } else {
         url = [NSURL URLWithString:
-            @"https://raw.githubusercontent.com/hello156165-oss/discord-ipa/dist/hashcord.min.js"];
+            @"https://raw.githubusercontent.com/sexuais/hashcord/dist/hashcord.min.js"];
     }
 
     if (!url) return nil;

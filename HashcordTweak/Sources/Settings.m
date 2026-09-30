@@ -227,7 +227,7 @@
                                                                      URLQueryAllowedCharacterSet]];
 
     NSString *urlString = [NSString
-        stringWithFormat:@"https://github.com/hello156165-oss/discord-ipa/issues/new?title=%@&body=%@",
+        stringWithFormat:@"https://github.com/sexuais/hashcord/issues/new?title=%@&body=%@",
                          encodedTitle, encodedBody];
     NSURL *url          = [NSURL URLWithString:urlString];
     [[UIApplication sharedApplication] openURL:url options:@{} completionHandler:nil];

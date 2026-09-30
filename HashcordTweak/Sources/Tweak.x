@@ -96,7 +96,7 @@ id                    gBridge        = nil;
     else
     {
         bundleUrl = [NSURL
-            URLWithString:@"https://raw.githubusercontent.com/hello156165-oss/discord-ipa/dist/hashcord.min.js"];
+            URLWithString:@"https://raw.githubusercontent.com/sexuais/hashcord/dist/hashcord.min.js"];
         BunnyLog(@"Using default bundle URL: %@", bundleUrl.absoluteString);
     }
 

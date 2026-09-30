@@ -256,7 +256,7 @@ static void showCommitsForBranch(NSString *branch, UIViewController *presenter,
 
     NSString *commitsUrl = [NSString
         stringWithFormat:
-            @"https://api.github.com/repos/hello156165-oss/discord-ipa/commits?sha=%@&per_page=10", branch];
+            @"https://api.github.com/repos/sexuais/hashcord/commits?sha=%@&per_page=10", branch];
     NSURL *commitsURL    = [NSURL URLWithString:commitsUrl];
 
     [[session
@@ -322,7 +322,7 @@ static void showCommitsForBranch(NSString *branch, UIViewController *presenter,
                                                                        NSString *bundleUrl =
                                                                            [NSString
                                                                                stringWithFormat:
-                                                                                   @"https://raw.githubusercontent.com/hello156165-oss/discord-ipa/%@/hashcord.min.js",
+                                                                                   @"https://raw.githubusercontent.com/sexuais/hashcord/%@/hashcord.min.js",
                                                                                    sha];
                                                                        NSURL *url = [NSURL
                                                                            URLWithString:bundleUrl];

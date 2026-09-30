@@ -4,7 +4,7 @@ Tweak to inject Hashcord into Discord
 
 ## Installation
 
-The latest builds can be found in the [Releases](https://github.com/hello156165-oss/discord-ipa/releases) tab.
+The latest builds can be found in the [Releases](https://github.com/sexuais/hashcord/releases) tab.
 
 <details>
 <summary>Issues & Workaround</summary>

@@ -5,7 +5,7 @@ Architecture: iphoneos-arm
 Description: A tweak to inject Hashcord into Discord
 Maintainer: Hashcord
 Author: Hashcord
-Icon: <https://raw.githubusercontent.com/hello156165-oss/discord-ipa/main/Hashcord/src/assets/icons/hashcord.png>
+Icon: <https://raw.githubusercontent.com/sexuais/hashcord/main/Hashcord/src/assets/icons/hashcord.png>
 Section: Tweaks
 Depends: mobilesubstrate (>= 0.9.5000)
 Conflicts: app.enmity, mod.vendetta, app.unbound, com.cloudysnow.btloader, app.pyoncord, cocobo1.kettu.tweak

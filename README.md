@@ -194,7 +194,7 @@ L'UI Hashcord utilise le format **Vendetta** (URL d'un dossier de plugin avec `m
 1. Dans Discord moddé → Paramètres → **Plugins** → bouton **+** (Install a plugin)
 2. Pour le plugin **Larp**, colle cette URL :
    ```
-   https://raw.githubusercontent.com/hello156165-oss/discord-ipa/dist/plugins/builds/larp/
+   https://raw.githubusercontent.com/sexuais/hashcord/dist/plugins/builds/larp/
    ```
    > Le `/` final n'est pas indispensable, Hashcord l'ajoute tout seul.
 3. Confirme l'avertissement "Hold on" (plugins non-proxifiés)
