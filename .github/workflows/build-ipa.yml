@@ -1,0 +1,481 @@
+name: Build Hashcord IPA
+
+# Build le tweak HashcordTweak avec Theos sur un runner macOS, l'injecte
+# dans un IPA Discord déchiffré fourni en input, et publie l'IPA en artifact.
+# L'IPA produit est non-signé : tu le signes avec Sideloadly (ton Apple ID).
+
+on:
+  workflow_dispatch:
+    inputs:
+      ipa_url:
+        description: "URL directe d'un IPA Discord DÉCHIFFRÉ (decrypted)"
+        required: true
+        type: string
+      release:
+        description: "Créer une GitHub Release avec l'IPA ?"
+        required: false
+        type: boolean
+        default: false
+
+env:
+  GH_TOKEN: ${{ github.token }}
+
+jobs:
+  build-tweak:
+    name: Build HashcordTweak (.deb)
+    runs-on: macos-15
+
+    defaults:
+      run:
+        working-directory: ./HashcordTweak
+
+    steps:
+
+      # ============================================================
+      # CHECKOUT
+      # ============================================================
+
+      - name: Checkout monorepo
+        uses: actions/checkout@v4
+
+      # ============================================================
+      # THEOS CACHE
+      # ============================================================
+
+      - name: Cache Theos
+        id: cache-theos
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/theos
+          key: ${{ runner.os }}-theos-v2-${{ hashFiles('HashcordTweak/Makefile') }}
+
+      # ============================================================
+      # SETUP THEOS
+      # ============================================================
+
+      - name: Setup Theos
+        if: steps.cache-theos.outputs.cache-hit != 'true'
+        uses: Randomblock1/theos-action@v1
+
+      # ============================================================
+      # GNU MAKE
+      # ============================================================
+
+      - name: Set GNU Make path
+        run: |
+          echo "PATH=$(brew --prefix make)/libexec/gnubin:$PATH" >> "$GITHUB_ENV"
+
+      # ============================================================
+      # INSTALL LDID
+      # ============================================================
+
+      - name: Install ldid
+        run: |
+          brew install ldid
+
+          echo ""
+          echo "ldid location:"
+          which ldid
+
+          echo ""
+          echo "ldid version:"
+          ldid -V || true
+
+      # ============================================================
+      # FIX LOGOS
+      # ============================================================
+
+      - name: Pin compatible Logos version
+        run: |
+          echo "========================================"
+          echo "          PINNING LOGOS"
+          echo "========================================"
+
+          cd "$THEOS/vendor/logos"
+
+          echo "Current Logos commit:"
+          git rev-parse HEAD || true
+
+          echo ""
+          echo "Fetching Logos history..."
+
+          if [ "$(git rev-parse --is-shallow-repository 2>/dev/null || echo false)" = "true" ]; then
+            git fetch --unshallow
+          else
+            git fetch --all --tags
+          fi
+
+          echo ""
+          echo "Checking out parent of 777925d..."
+
+          git checkout 777925d^
+
+          echo ""
+          echo "Final Logos commit:"
+          git rev-parse HEAD
+          git log -1 --oneline
+
+          echo ""
+          echo "========================================"
+
+        env:
+          THEOS: ${{ github.workspace }}/theos
+
+
+      # ============================================================
+      # DIAGNOSTICS
+      # ============================================================
+
+      - name: Diagnose Theos toolchain
+        run: |
+          echo "========================================"
+          echo "           SYSTEM INFORMATION"
+          echo "========================================"
+
+          sw_vers || true
+          uname -a || true
+
+          echo ""
+          echo "========================================"
+          echo "           THEOS INFORMATION"
+          echo "========================================"
+
+          echo "THEOS=$THEOS"
+
+          git -C "$THEOS" rev-parse HEAD || true
+          git -C "$THEOS" log -1 --oneline || true
+          git -C "$THEOS" status --short || true
+
+          echo ""
+          echo "========================================"
+          echo "           LOGOS INFORMATION"
+          echo "========================================"
+
+          echo "Logos location:"
+          find "$THEOS" -path "*/logos.pl" -type f -print || true
+
+          echo ""
+          echo "Logos commit:"
+          git -C "$THEOS/vendor/logos" rev-parse HEAD || true
+          git -C "$THEOS/vendor/logos" log -1 --oneline || true
+
+          echo ""
+          echo "Logos help:"
+          "$THEOS/bin/logos.pl" --help | head -50 || true
+
+          echo ""
+          echo "Logos Perl:"
+          perl -v | head -5 || true
+
+          echo ""
+          echo "========================================"
+          echo "           COMPILER INFORMATION"
+          echo "========================================"
+
+          clang --version || true
+          xcodebuild -version || true
+
+          echo ""
+          echo "========================================"
+          echo "           MAKE INFORMATION"
+          echo "========================================"
+
+          which make || true
+          make --version || true
+
+          echo ""
+          echo "========================================"
+          echo "           LDID INFORMATION"
+          echo "========================================"
+
+          which ldid || true
+          ldid -V || true
+
+          echo ""
+          echo "========================================"
+          echo "           THEOS TOOLCHAIN"
+          echo "========================================"
+
+          ls -la "$THEOS/bin" || true
+          ls -la "$THEOS/vendor/logos/bin" || true
+
+          echo ""
+          echo "========================================"
+          echo "       SIDeloading.x ORIGINAL"
+          echo "========================================"
+
+          sed -n '90,110p' Sources/Sideloading.x || true
+
+          echo ""
+          echo "========================================"
+          echo "       PREPROCESSED LOGOS OUTPUT"
+          echo "========================================"
+
+          "$THEOS/bin/logos.pl" Sources/Sideloading.x \
+            > /tmp/Sideloading-logos.m || true
+
+          echo ""
+          echo "Relevant generated code:"
+          grep -n -A15 -B10 "NSMutableDictionary.*info" \
+            /tmp/Sideloading-logos.m || true
+
+          echo ""
+          echo "========================================"
+          echo "              END DIAGNOSTIC"
+          echo "========================================"
+
+        env:
+          THEOS: ${{ github.workspace }}/theos
+
+      # ============================================================
+      # BUILD DEB
+      # ============================================================
+
+      - name: Build .deb package
+        run: |
+          make clean package
+        env:
+          THEOS: ${{ github.workspace }}/theos
+
+      # ============================================================
+      # UPLOAD DEB
+      # ============================================================
+
+      - name: Upload .deb
+        uses: actions/upload-artifact@v4
+        with:
+          name: hashcord-tweak-deb
+          path: HashcordTweak/packages/*-arm64.deb
+          if-no-files-found: error
+
+  # ==============================================================
+  # BUILD IPA
+  # ==============================================================
+
+  build-ipa:
+    name: Inject tweak into Discord IPA
+    runs-on: macos-15
+    needs: build-tweak
+
+    steps:
+
+      # ============================================================
+      # CHECKOUT
+      # ============================================================
+
+      - name: Checkout monorepo
+        uses: actions/checkout@v4
+
+      # ============================================================
+      # DOWNLOAD DEB
+      # ============================================================
+
+      - name: Download tweak artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: hashcord-tweak-deb
+          path: ./artifacts
+
+      # ============================================================
+      # DOWNLOAD DISCORD IPA
+      # ============================================================
+
+      - name: Download Discord IPA
+        run: |
+          echo "Downloading Discord IPA from input URL..."
+
+          curl -fL \
+            --retry 3 \
+            --retry-delay 5 \
+            -o discord.ipa \
+            "${{ inputs.ipa_url }}"
+
+          echo ""
+          echo "Downloaded IPA:"
+          ls -lh discord.ipa
+
+          echo ""
+          echo "File information:"
+          file discord.ipa
+
+      # ============================================================
+      # EXTRACT HASHCORD METADATA
+      # ============================================================
+
+      - name: Extract metadata from HashcordTweak/control
+        id: meta
+        working-directory: ./HashcordTweak
+        run: |
+          NAME=$(grep '^Name:' control | cut -d ' ' -f 2)
+          PACKAGE=$(grep '^Package:' control | cut -d ' ' -f 2)
+          VERSION=$(grep '^Version:' control | cut -d ' ' -f 2)
+
+          DEB_FILE_NAME="${PACKAGE}_${VERSION}_iphoneos-arm64.deb"
+
+          echo "Hashcord name: $NAME"
+          echo "Package: $PACKAGE"
+          echo "Version: $VERSION"
+          echo "DEB: $DEB_FILE_NAME"
+
+          echo "app_name=$NAME" >> "$GITHUB_OUTPUT"
+          echo "deb_file=$DEB_FILE_NAME" >> "$GITHUB_OUTPUT"
+
+      # ============================================================
+      # INSTALL CYAN / PYZULE
+      # ============================================================
+
+      - name: Install cyan (pyzule-rw)
+        run: |
+          python3 -m pip install \
+            --break-system-packages \
+            --force-reinstall \
+            https://github.com/asdfzxcvbn/pyzule-rw/archive/main.zip \
+            Pillow
+
+      # ============================================================
+      # INJECT TWEAK
+      # ============================================================
+
+      - name: Inject tweak into Discord IPA
+        run: |
+          DEB_PATH=$(find ./artifacts -name "*.deb" | head -n 1)
+
+          if [ -z "$DEB_PATH" ]; then
+            echo "ERROR: No .deb package found!"
+            exit 1
+          fi
+
+          echo "Using DEB:"
+          echo "$DEB_PATH"
+
+          echo ""
+          echo "Injecting HashcordTweak into Discord IPA..."
+
+          cyan -uwsgq \
+            -i discord.ipa \
+            -o "${{ steps.meta.outputs.app_name }}.ipa" \
+            -f "$DEB_PATH"
+
+          echo ""
+          echo "Generated IPA:"
+          ls -lh "${{ steps.meta.outputs.app_name }}.ipa"
+
+      # ============================================================
+      # VERIFY HASHCORD INJECTION
+      # ============================================================
+
+      - name: Verify Hashcord injection
+        run: |
+          echo "========================================"
+          echo "       VERIFYING HASHCORD INJECTION"
+          echo "========================================"
+
+          rm -rf _verify_ipa
+
+          unzip -q \
+            "${{ steps.meta.outputs.app_name }}.ipa" \
+            -d _verify_ipa
+
+          echo ""
+          echo "HashcordTweak.dylib:"
+          find _verify_ipa \
+            -name "HashcordTweak.dylib" \
+            -print
+
+          echo ""
+          echo "All injected dylibs:"
+          find _verify_ipa \
+            -name "*.dylib" \
+            -print
+
+          echo ""
+          echo "Frameworks:"
+          find _verify_ipa \
+            -name "*.framework" \
+            -print
+
+          echo ""
+          echo "Discord executable:"
+          ls -lh \
+            _verify_ipa/Payload/Discord.app/Discord
+
+          echo ""
+          echo "========================================"
+
+          if find _verify_ipa \
+            -name "HashcordTweak.dylib" |
+            grep -q "HashcordTweak.dylib"; then
+
+            echo ""
+            echo "✅ HashcordTweak.dylib IS INSIDE THE IPA"
+            echo ""
+
+          else
+
+            echo ""
+            echo "❌ HashcordTweak.dylib NOT FOUND"
+            echo ""
+
+            exit 1
+          fi
+
+          rm -rf _verify_ipa
+
+      # ============================================================
+      # GET DISCORD VERSION
+      # ============================================================
+
+      - name: Get Discord version from IPA
+        id: discord_ver
+        run: |
+          rm -rf _ipa_inspect
+
+          unzip -q \
+            "${{ steps.meta.outputs.app_name }}.ipa" \
+            -d _ipa_inspect
+
+          DISCORD_VERSION=$(
+            plutil -p \
+              _ipa_inspect/Payload/Discord.app/Info.plist |
+            grep CFBundleShortVersionString |
+            cut -d '"' -f 4
+          )
+
+          if [ -z "$DISCORD_VERSION" ]; then
+            echo "ERROR: Could not determine Discord version."
+            exit 1
+          fi
+
+          echo "Discord version: $DISCORD_VERSION"
+
+          echo "discord_version=$DISCORD_VERSION" >> "$GITHUB_OUTPUT"
+
+          rm -rf _ipa_inspect
+
+      # ============================================================
+      # UPLOAD FINAL IPA
+      # ============================================================
+
+      - name: Upload final IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.meta.outputs.app_name }}-discord-${{ steps.discord_ver.outputs.discord_version }}-ipa
+          path: ${{ steps.meta.outputs.app_name }}.ipa
+          if-no-files-found: error
+
+      # ============================================================
+      # OPTIONAL GITHUB RELEASE
+      # ============================================================
+
+      - name: Create GitHub Release
+        if: inputs.release == true
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.discord_ver.outputs.discord_version }}
+          name: Hashcord ${{ steps.discord_ver.outputs.discord_version }}
+          files: ${{ steps.meta.outputs.app_name }}.ipa
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

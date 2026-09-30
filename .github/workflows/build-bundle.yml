@@ -1,0 +1,146 @@
+name: Build Hashcord JS Bundle and Plugins
+
+# Build the Hashcord JS bundle AND the external plugins, then publish everything
+# onto the `dist` branch while preserving older commits for bundle recovery.
+#
+# Resulting layout on the `dist` branch:
+#   /
+#   ├── hashcord.js
+#   ├── hashcord.min.js       (same content; kept under the default name used by the tweak)
+#   ├── BUILD_INFO.txt
+#   └── plugins/
+#       ├── repo.json          ← add this URL in Hashcord → Plugins → Add custom plugin repository
+#       └── builds/
+#           └── <plugin-id>/
+#               ├── manifest.json
+#               └── index.js
+#
+# Custom URLs once the repo is public:
+#   Bundle:  https://raw.githubusercontent.com/<owner>/<repo>/dist/hashcord.js
+#   Plugins: https://raw.githubusercontent.com/<owner>/<repo>/dist/plugins/
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+    paths:
+      - 'Hashcord/src/**'
+      - 'Hashcord/package.json'
+      - 'Hashcord/bun.lock'
+      - 'Hashcord/scripts/**'
+      - 'plugins/src/**'
+      - 'plugins/build.mjs'
+      - 'plugins/package.json'
+      - 'plugins/bunny-types.d.ts'
+      - '.github/workflows/build-bundle.yml'
+
+jobs:
+  build:
+    name: Build bundle + plugins
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # -----------------------------------------------------------------
+      # Build the Hashcord JS bundle
+      # -----------------------------------------------------------------
+      - name: Install Hashcord dependencies
+        working-directory: ./Hashcord
+        run: bun install --frozen-lockfile
+
+      - name: Build Hashcord bundle
+        working-directory: ./Hashcord
+        run: bun run build
+
+      - name: Verify Hashcord bundle
+        run: |
+          ls -lh Hashcord/dist/
+          file Hashcord/dist/hashcord.js
+          echo "Hashcord bundle size: $(du -h Hashcord/dist/hashcord.js | cut -f1)"
+
+      # -----------------------------------------------------------------
+      # Build the external plugins
+      # -----------------------------------------------------------------
+      - name: Install plugin build dependencies
+        working-directory: ./plugins
+        run: bun install --no-save
+
+      - name: Build plugins
+        working-directory: ./plugins
+        run: node build.mjs
+
+      - name: Verify plugin builds
+        run: |
+          ls -lh plugins/builds/ || true
+          find plugins/builds -type f \( -name '*.json' -o -name '*.js' \) | sort
+          cat plugins/builds/repo.json
+
+      # -----------------------------------------------------------------
+      # Upload artifacts so we can also download builds from the Actions UI
+      # -----------------------------------------------------------------
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: hashcord-bundle-and-plugins
+          path: |
+            Hashcord/dist/hashcord.js
+            plugins/builds/**/*
+            plugins/repo.json
+          if-no-files-found: error
+
+      # -----------------------------------------------------------------
+      # Publish to the `dist` branch
+      # -----------------------------------------------------------------
+      - name: Publish to `dist` branch
+        run: |
+          PUBLISH_DIR=/tmp/dist-publish
+          rm -rf "$PUBLISH_DIR"
+          mkdir -p "$PUBLISH_DIR"
+
+          cd "$PUBLISH_DIR"
+          git init -b dist
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          if git fetch origin dist; then
+            git reset --hard FETCH_HEAD
+          fi
+
+          mkdir -p "$PUBLISH_DIR/plugins"
+          rm -rf "$PUBLISH_DIR/plugins/builds" "$PUBLISH_DIR/plugins/repo.json"
+
+          # Hashcord bundle
+          cp Hashcord/dist/hashcord.js "$PUBLISH_DIR/hashcord.js"
+          cp Hashcord/dist/hashcord.js "$PUBLISH_DIR/hashcord.min.js"
+
+          # Plugin builds
+          cp plugins/repo.json "$PUBLISH_DIR/plugins/repo.json"
+          if [ -d plugins/builds ]; then
+            mkdir -p "$PUBLISH_DIR/plugins/builds"
+            cp -R plugins/builds/. "$PUBLISH_DIR/plugins/builds/"
+          fi
+
+          # Build metadata
+          {
+            echo "Built on $(date -u)"
+            echo "Source commit: ${GITHUB_SHA}"
+            echo
+            echo "URLs:"
+            echo "  Bundle:    https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/dist/hashcord.js"
+            echo "  Plugin repo: https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/dist/plugins/repo.json"
+          } > "$PUBLISH_DIR/BUILD_INFO.txt"
+
+          git add .
+          git commit -m "build: bundle + plugins from ${GITHUB_SHA::7}"
+          git push origin dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
