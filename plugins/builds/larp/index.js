@@ -1,6 +1,6 @@
 (function(){
   /* Larp plugin bundle for larp.
-     Built 2026-09-30T02:19:06.700Z. */
+     Built 2026-09-30T06:02:59.377Z. */
   "use strict";
   function __larpAssetId(name){
     try {
